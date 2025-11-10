@@ -75,7 +75,7 @@ class MLP(Model):
                 raise ValueError(
                     f"Hidden layer {i + 1} size is less than 1. Adjust hidden_size or shrink_rate."
                 )
-
+            print(in_size,current_size,next_size,flush=True)
             layers.append(nn.Linear(current_size, next_size))
             layers.append(nn.Dropout(dropout))
             layers.append(act_fn)

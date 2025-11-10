@@ -73,6 +73,7 @@ def train(config, args):
     # Run model training
     model_list, scheme_type, train_time = _train_models(config, scheme)
 
+    print("model_list=",model_list,flush=True)
     # Print trained model summary
     _summary_model(model_list[0], dataset)
 
@@ -199,6 +200,7 @@ def _setup_scheme(config, args, model, dataset):
         "model_config": config.get("model"),
         "hyper_params": config.get("hyperparams", {}),
         "kfold_params": config.get("kfold_params", {}),
+        "earlystop_params": config.get("earlystop_params", {}),
         "bootstrap_params": config.get("bootstrap_params", {}),
         "ensemble_params": config.get("ensemble_params", {}),
         "lr_scheduler": config.get("lr_scheduler", False),
@@ -227,6 +229,10 @@ def _train_models(config, scheme):
         logging.info(">> Training model using kfold cross-validation...\n")
         scheme_type = "kfold"
         model_list.append(scheme.train_kfold())
+    elif config["earlystop"]:
+        logging.info(">> Training model using EarlyStop...\n")
+        scheme_type = "earlystop"
+        model_list.append(scheme.train_earlystop())
     else:
         logging.info(">> Training model using standard training procedure...\n")
         scheme_type = "std"
@@ -239,6 +245,8 @@ def _train_models(config, scheme):
 
 def _summary_model(model, dataset):
     logging.info("\n--- Model Summary ---")
+
+    print("model=",model,flush=True)
 
     if model.aegan_flag:
         dummy_x = torch.randn(1, dataset.x_size)
