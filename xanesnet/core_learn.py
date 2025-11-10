@@ -73,7 +73,6 @@ def train(config, args):
     # Run model training
     model_list, scheme_type, train_time = _train_models(config, scheme)
 
-    print("model_list=",model_list,flush=True)
     # Print trained model summary
     _summary_model(model_list[0], dataset)
 
@@ -245,8 +244,6 @@ def _train_models(config, scheme):
 
 def _summary_model(model, dataset):
     logging.info("\n--- Model Summary ---")
-
-    print("model=",model,flush=True)
 
     if model.aegan_flag:
         dummy_x = torch.randn(1, dataset.x_size)
