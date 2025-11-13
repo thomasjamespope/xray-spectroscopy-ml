@@ -67,7 +67,7 @@ class SoftShellSpectraNet(Model):
         )
 
         self.coeff_head = CoeffHeadGroupedResidualPreLN(
-            latent_dim=latent_dim,
+            latent_dim=d_input*2,
             K_groups=kgroups,
             hidden=head_hidden,
             depth=head_depth,

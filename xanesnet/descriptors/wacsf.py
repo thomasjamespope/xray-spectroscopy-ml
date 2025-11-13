@@ -63,6 +63,7 @@ class WACSF(VectorDescriptor):
         g4_parameterisation: str = "centred",
         use_charge=False,
         use_spin=False,
+        absorber_atom_only: bool = True,
     ):
         """
         Args:
@@ -116,6 +117,7 @@ class WACSF(VectorDescriptor):
         self.g4_parameterisation = g4_parameterisation
         self.use_charge = use_charge
         self.use_spin = use_spin
+        self.absorber_atom_only = absorber_atom_only
         if self.n_g4:
             self.l = l if l is not None else [1.0, -1.0]
             self.z = z if z is not None else [1.0]
@@ -139,18 +141,27 @@ class WACSF(VectorDescriptor):
             )
 
     def transform(self, system: Atoms) -> np.ndarray:
-        rij_in_range = system.get_distances(0, range(len(system))) < self.r_max
-        system = system[rij_in_range]
-
-        ij = np.array([[0, j] for j in range(1, len(system))], dtype="uint16")
+        if self.absorber_atom_only:
+            wacsf = self.transform_single_index(system, index = 0)
+        else:
+            wacsf = np.vstack(
+                [self.transform_single_index(system, index = i) for i in range(len(system))]
+            )
+        return wacsf
+        
+        
+    def transform_single_index(self, system: Atoms, index: int) -> np.ndarray:
+        mask = system.get_distances(index, range(len(system))) < self.r_max
+        neighbour_indices = np.where(mask)[0]
+        
+        ij = np.array([[index, j] for j in neighbour_indices if j != index], dtype="uint16")
 
         if self.n_g4:
             jik = np.array(
                 [
-                    [j, 0, k]
-                    for j in range(1, len(system))
-                    for k in range(1, len(system))
-                    if k > j
+                    [j, index, k]
+                    for j in neighbour_indices if j != index
+                    for k in neighbour_indices if k != index and k > j
                 ],
                 dtype="uint16",
             )
@@ -159,7 +170,7 @@ class WACSF(VectorDescriptor):
         g1 = np.sum(cosine_cutoff(rij, self.r_max))
 
         wacsf = g1
-
+        
         if self.n_g2:
             zj = system.get_atomic_numbers()[ij[:, 1]]
             zj = 0.1 * zj
