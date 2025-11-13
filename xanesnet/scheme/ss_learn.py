@@ -111,6 +111,19 @@ class SSLearn(Learn):
 
         logging.info("--- Training Finished ---")
 
+        shell_centres = model.encoder.shell_centers.detach().cpu().numpy()
+        shell_widths = model.encoder.shell_widths.detach().cpu().numpy()
+        shell_weights = torch.chunk(
+            model.encoder.post_shell[0].weight.detach().cpu(), 
+            model.encoder.n_shells, 
+            dim=1
+        )
+        shell_importance = [w.abs().mean().item() for w in shell_weights]
+
+        print("Learned shell centres (Å):", shell_centres)
+        print("Learned shell widths (Å): ", shell_widths)
+        print("Learned shell importance: ", shell_importance)
+
         # Log model and final evaluation
         if self.mlflow_flag:
             logging.info("\nLogging the trained model as a run artifact...")
@@ -196,6 +209,19 @@ class SSLearn(Learn):
 
         logging.info("--- Training Finished ---")
 
+        shell_centres = saved_model.encoder.shell_centers.detach().cpu().numpy()
+        shell_widths = saved_model.encoder.shell_widths.detach().cpu().numpy()
+        shell_weights = torch.chunk(
+            saved_model.encoder.post_shell[0].weight.detach().cpu(), 
+            saved_model.encoder.n_shells, 
+            dim=1
+        )
+        shell_importance = [w.abs().mean().item() for w in shell_weights]
+
+        print("Learned shell centres (Å):", shell_centres)
+        print("Learned shell widths (Å): ", shell_widths)
+        print("Learned shell importance: ", shell_importance)
+        
         # Log model and final evaluation
         if self.mlflow_flag:
             logging.info("\nLogging the trained model as a run artifact...")
